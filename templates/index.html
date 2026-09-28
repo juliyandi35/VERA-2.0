@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="id" data-model="{{ model_name }}">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071019">
+  <meta name="description" content="V.E.R.A., ruang kerja riset AI lokal yang tenang, aman, dan terstruktur.">
+  <title>V.E.R.A. — Virtual Enhance Research Assistant</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%23071019'/%3E%3Cpath d='M12 14l20 39 20-39h-9L32 37 21 14z' fill='%2367d8dc'/%3E%3C/svg%3E">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/vera.css') }}">
+  <script type="importmap" nonce="{{ csp_nonce() }}">
+  {
+    "imports": {
+      "three": "{{ url_for('static', filename='vendor/three/build/three.module.min.js') }}",
+      "three/addons/": "{{ url_for('static', filename='vendor/three/examples/jsm/') }}"
+    }
+  }
+  </script>
+</head>
+<body>
+  <a class="skip-link" href="#composer-input">Lewati ke kolom perintah</a>
+
+  <div class="intro" id="intro" role="status" aria-label="V.E.R.A. sedang menyiapkan ruang kerja">
+    <div class="intro__aperture" aria-hidden="true">
+      <span class="intro__ray intro__ray--a"></span>
+      <span class="intro__ray intro__ray--b"></span>
+      <span class="intro__ray intro__ray--c"></span>
+      <span class="intro__seed"></span>
+    </div>
+    <p class="intro__name">V.E.R.A.</p>
+    <p class="intro__greeting">Menyiapkan ruang riset Anda.</p>
+    <span class="sr-only">Tekan Escape untuk melewati pembuka.</span>
+  </div>
+
+  <div class="app-shell" id="app-shell" aria-hidden="true" inert>
+    <canvas class="knowledge-field" id="knowledge-field" aria-hidden="true"></canvas>
+
+    <header class="topbar">
+      <button class="brand" type="button" data-action="home" aria-label="Kembali ke ruang utama">
+        <span class="brand__mark" aria-hidden="true"><i></i></span>
+        <span class="brand__name">V.E.R.A.</span>
+        <span class="brand__edition">LOCAL RESEARCH CORE</span>
+      </button>
+      <div class="session-heading" aria-live="polite">
+        <span class="session-heading__label">Ruang aktif</span>
+        <strong id="session-title">Penelitian baru</strong>
+      </div>
+      <div class="system-cluster">
+        <button class="system-state" id="system-state" type="button" data-action="open-system" aria-label="Lihat status sistem">
+          <span class="state-signal" id="state-signal" aria-hidden="true"></span>
+          <span id="state-label">Menghubungkan</span>
+        </button>
+        <time class="system-clock" id="system-clock"></time>
+      </div>
+    </header>
+
+    <nav class="orbit-dock" aria-label="Navigasi utama">
+      <button type="button" data-action="new" data-tooltip="Penelitian baru" aria-label="Penelitian baru">+</button>
+      <button type="button" data-action="history" data-tooltip="Riwayat" aria-label="Buka riwayat">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.34-5.66L4 8.67M4 4v4.67h4.67M12 7.5V12l3 1.75"/></svg>
+      </button>
+      <button type="button" data-action="research" data-tooltip="Jejak riset" aria-label="Buka jejak riset">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="m16 16 4 4M8.5 11h5M11 8.5v5"/></svg>
+      </button>
+      <button type="button" data-action="settings" data-tooltip="Mode dan kualitas" aria-label="Buka mode dan kualitas">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h2M10 17h10M14 4v6M6 14v6"/></svg>
+      </button>
+      <button type="button" data-action="command" data-tooltip="Perintah cepat" aria-label="Buka perintah cepat">
+        <span class="command-glyph">⌘</span>
+      </button>
+      <button type="button" data-action="toggle-clap" data-tooltip="Deteksi Tepukan (2x)" aria-label="Deteksi Tepukan Tangan 2 Kali" id="dock-clap-btn" class="is-active">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+      </button>
+    </nav>
+
+    <div class="core-stage" id="core-stage" data-state="idle" aria-hidden="true">
+      <canvas id="core-canvas"></canvas>
+      <div class="core-stage__halo"></div>
+    </div>
+
+    <main class="workspace" id="workspace">
+      <section class="welcome-view" id="welcome-view" aria-labelledby="welcome-title">
+        <div class="welcome-copy">
+          <p class="welcome-kicker" id="welcome-kicker">Inti riset siap</p>
+          <h1 id="welcome-title">Apa yang ingin Anda telaah?</h1>
+          <p>Susun pertanyaan, lampirkan dokumen, atau mulai dari fokus penelitian.</p>
+        </div>
+        <div class="prompt-starters" aria-label="Contoh perintah">
+          <button type="button" data-prompt="Bantu saya menyusun peta literatur untuk topik penelitian ini.">Susun peta literatur</button>
+          <button type="button" data-prompt="Telaah argumen ini dan tunjukkan bagian yang perlu diverifikasi.">Telaah argumen</button>
+          <button type="button" data-prompt="Bandingkan temuan utama dari sumber yang saya lampirkan.">Bandingkan sumber</button>
+        </div>
+      </section>
+
+      <section class="conversation" id="conversation" aria-label="Percakapan riset" hidden>
+        <div class="conversation__document" id="messages"></div>
+        <button class="scroll-latest" id="scroll-latest" type="button" hidden>Ke jawaban terbaru</button>
+      </section>
+    </main>
+
+    <footer class="composer-wrap">
+      <div class="attachment-strip" id="attachment-strip" aria-live="polite"></div>
+      <form class="composer" id="composer" autocomplete="off">
+        <input id="file-input" type="file" accept=".txt,.md,.csv,.py,.pdf,.docx,.jpg,.jpeg,.png,.webp" multiple hidden>
+        <button class="composer__utility" type="button" data-action="attach" aria-label="Lampirkan berkas" title="Lampirkan berkas">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.5 12.5 5.15-5.15a3 3 0 1 1 4.24 4.24l-7.42 7.42a5 5 0 0 1-7.07-7.07l7.78-7.78M7.23 14.8l7.43-7.43"/></svg>
+        </button>
+        <label class="composer__field" for="composer-input">
+          <span class="sr-only">Tulis pertanyaan atau perintah</span>
+          <textarea id="composer-input" rows="1" maxlength="20000" placeholder="Tanyakan, telaah, atau rencanakan sesuatu…"></textarea>
+          <span class="composer__meta"><kbd>Enter</kbd> kirim · <kbd>Shift</kbd> + <kbd>Enter</kbd> baris baru</span>
+        </label>
+        <button class="composer__voice" type="button" data-action="voice" aria-label="Mulai input suara" title="Input suara">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3M9 21h6"/></svg>
+        </button>
+        <button class="composer__send" id="send-button" type="submit" aria-label="Kirim perintah">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12 13-7-4.5 14-2.2-5.3L5 12Z"/></svg>
+          <span>Kirim</span>
+        </button>
+      </form>
+      <p class="composer-status"><span id="mode-summary">Mode umum · Web terbuka</span><span>Data tetap di perangkat saat memakai model lokal.</span></p>
+    </footer>
+  </div>
+
+  <div class="scrim" id="scrim" hidden></div>
+  <aside class="context-panel" id="context-panel" aria-labelledby="panel-title" aria-hidden="true" inert>
+    <div class="panel-head"><div><span id="panel-kicker">Ruang kontekstual</span><h2 id="panel-title">Jejak riset</h2></div><button type="button" data-action="close-panel" aria-label="Tutup panel">×</button></div>
+    <div class="panel-body" id="panel-body"></div>
+  </aside>
+
+  <div class="dialog" id="settings-dialog" role="dialog" aria-modal="true" aria-labelledby="settings-title" hidden>
+    <div class="dialog__surface">
+      <div class="panel-head"><div><span>Preferensi kerja</span><h2 id="settings-title">Mode V.E.R.A.</h2></div><button type="button" data-action="close-dialog" aria-label="Tutup pengaturan">×</button></div>
+      <div class="dialog__body" id="settings-body"></div>
+    </div>
+  </div>
+
+  <div class="command-palette" id="command-palette" role="dialog" aria-modal="true" aria-labelledby="command-title" hidden>
+    <div class="command-palette__surface">
+      <label for="command-input" id="command-title">Cari perintah</label>
+      <input id="command-input" type="search" placeholder="Ketik tindakan…" autocomplete="off">
+      <div id="command-results" role="listbox"></div>
+    </div>
+  </div>
+
+  <div class="toast-region" id="toast-region" aria-live="polite" aria-atomic="true"></div>
+  <script src="{{ url_for('static', filename='js/particles_data.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/vera.js') }}" defer></script>
+  <script type="module" src="{{ url_for('static', filename='js/core-mind.js') }}"></script>
+</body>
+</html>
